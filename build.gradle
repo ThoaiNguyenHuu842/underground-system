@@ -1,0 +1,26 @@
+plugins {
+    id 'application'
+}
+
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+group 'com.rikkeisoft'
+version '1.0-SNAPSHOT'
+
+application {
+    mainClassName = 'com.rikkeisoft.MainApplication' // Replace with your actual main class
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+test {
+    useJUnitPlatform()
+}
