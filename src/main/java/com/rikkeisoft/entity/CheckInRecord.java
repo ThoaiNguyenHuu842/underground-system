@@ -18,16 +18,8 @@ public class CheckInRecord {
     return id;
   }
 
-  public void setId(Integer id) {
-    this.id = id;
-  }
-
   public String getCheckInStation() {
     return checkInStation;
-  }
-
-  public void setCheckInStation(String checkInStation) {
-    this.checkInStation = checkInStation;
   }
 
   public String getCheckOutStation() {
@@ -40,10 +32,6 @@ public class CheckInRecord {
 
   public Integer getCheckInTime() {
     return checkInTime;
-  }
-
-  public void setCheckInTime(Integer checkInTime) {
-    this.checkInTime = checkInTime;
   }
 
   public Integer getCheckOutTime() {
