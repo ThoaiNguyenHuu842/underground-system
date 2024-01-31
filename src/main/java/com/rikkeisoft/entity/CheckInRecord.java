@@ -1,22 +1,16 @@
 package com.rikkeisoft.entity;
 
 public class CheckInRecord {
-
-  private Integer id;
   private String checkInStation;
   private String checkOutStation;
   private Integer checkInTime;
   private Integer checkOutTime;
 
-  public CheckInRecord(Integer id, String checkInStation, Integer checkInTime) {
-    this.id = id;
+  public CheckInRecord(String checkInStation, Integer checkInTime) {
     this.checkInStation = checkInStation;
     this.checkInTime = checkInTime;
   }
 
-  public Integer getId() {
-    return id;
-  }
 
   public String getCheckInStation() {
     return checkInStation;

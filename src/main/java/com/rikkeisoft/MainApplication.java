@@ -1,6 +1,6 @@
 package com.rikkeisoft;
 
-import com.rikkeisoft.entity.Trip;
+import com.rikkeisoft.entity.Route;
 import com.rikkeisoft.service.UndergroundSystem;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,11 +8,11 @@ import java.util.List;
 public class MainApplication {
 
   public static void main(String[] args) {
-    List<Trip> trips = new ArrayList<>();
-    trips.add(new Trip("A", "B"));
-    trips.add(new Trip("B", "C"));
-    trips.add(new Trip("A", "C"));
-    UndergroundSystem undergroundSystem = new UndergroundSystem(trips);
+    List<Route> routes = new ArrayList<>();
+    routes.add(new Route("A", "B"));
+    routes.add(new Route("B", "C"));
+    routes.add(new Route("A", "C"));
+    UndergroundSystem undergroundSystem = new UndergroundSystem(routes);
 
     undergroundSystem.checkIn(23, "A", 20);
     undergroundSystem.checkOut(23, "C", 30);

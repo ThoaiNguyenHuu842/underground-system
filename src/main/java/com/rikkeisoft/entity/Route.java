@@ -2,11 +2,11 @@ package com.rikkeisoft.entity;
 
 import java.util.Objects;
 
-public class Trip {
+public class Route {
   private String startStation;
   private String endStation;
 
-  public Trip(String startStation, String endStation) {
+  public Route(String startStation, String endStation) {
     this.startStation = startStation;
     this.endStation = endStation;
   }
@@ -27,8 +27,8 @@ public class Trip {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Trip trip = (Trip) o;
-    return startStation.equals(trip.startStation) && endStation.equals(trip.endStation);
+    Route route = (Route) o;
+    return startStation.equals(route.startStation) && endStation.equals(route.endStation);
   }
 
   @Override

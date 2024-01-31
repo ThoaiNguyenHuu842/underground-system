@@ -1,21 +1,20 @@
 package com.rikkeisoft.service;
 
 import com.rikkeisoft.entity.CheckInRecord;
-import com.rikkeisoft.entity.Trip;
-import java.util.ArrayList;
+import com.rikkeisoft.entity.Route;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class UndergroundSystem {
 
-  private final List<Trip> trips;
-  private ArrayList<CheckInRecord> checkInRecords = new ArrayList<>();
-  private Map<Trip, Double> mapRouteAverageTime = new HashMap<>();
+  private final List<Route> routes;
+  private Map<Integer, CheckInRecord> mapPersonalIdAndCurrentCheckIn = new HashMap<>();
+  private Map<Route, Double> mapRouteAndAverageTime = new HashMap<>();
+  private Map<Route, Integer> mapRouteAndTotalCheckIns = new HashMap<>();
 
-  public UndergroundSystem(List<Trip> trips) {
-    this.trips = trips;
+  public UndergroundSystem(List<Route> routes) {
+    this.routes = routes;
   }
 
   public void checkIn(int id, String stationName, int t) {
@@ -25,12 +24,12 @@ public class UndergroundSystem {
       throw new IllegalArgumentException(String.format("Check-in time %d is invalid", t));
     }
 
-    boolean hasExistingCheckInRecord = checkInRecords.stream().anyMatch(r -> r.getId() == id && r.getCheckOutTime() == null);
+    boolean hasExistingCheckInRecord = mapPersonalIdAndCurrentCheckIn.containsKey(id);
     if (hasExistingCheckInRecord) {
       throw new IllegalArgumentException(String.format("Don't allow to check in because personal id %d checked in already but hasn't checked out", id));
     }
 
-    checkInRecords.add(new CheckInRecord(id, stationName, t));
+    mapPersonalIdAndCurrentCheckIn.put(id, new CheckInRecord(stationName, t));
   }
 
   public void checkOut(int id, String stationName, int t) {
@@ -40,29 +39,30 @@ public class UndergroundSystem {
       throw new IllegalArgumentException(String.format("Check-out time %d is invalid", t));
     }
 
-    Optional<CheckInRecord> existingCheckInRecordOptional = checkInRecords.stream().filter(r -> r.getId() == id && r.getCheckOutTime() == null).findFirst();
-    if (existingCheckInRecordOptional.isEmpty()) {
+    if (!mapPersonalIdAndCurrentCheckIn.containsKey(id)) {
       throw new IllegalArgumentException(String.format("Personal id %d hasn't checked in yet", id));
     }
 
-    CheckInRecord existingCheckInRecord = existingCheckInRecordOptional.get();
-    if (trips.stream().noneMatch(trip -> trip.getStartStation().equals(existingCheckInRecord.getCheckInStation()) && trip.getEndStation().equals(stationName))) {
-      throw new IllegalArgumentException(String.format("Don't have any trip from station %s to station %s", existingCheckInRecord.getCheckInStation(), stationName));
+    CheckInRecord currentCheckInRecord = mapPersonalIdAndCurrentCheckIn.get(id);
+    if (routes.stream().noneMatch(
+      route -> route.getStartStation().equals(currentCheckInRecord.getCheckInStation()) && route.getEndStation().equals(stationName))) {
+      throw new IllegalArgumentException(String.format("Don't have any trip from station %s to station %s", currentCheckInRecord.getCheckInStation(), stationName));
     }
-    if (t <= existingCheckInRecord.getCheckInTime()) {
-      throw new IllegalArgumentException(String.format("Check-out time %d is less than check-in time %d", t, existingCheckInRecord.getCheckInTime()));
+    if (t <= currentCheckInRecord.getCheckInTime()) {
+      throw new IllegalArgumentException(String.format("Check-out time %d is less than check-in time %d", t, currentCheckInRecord.getCheckInTime()));
     }
 
-    existingCheckInRecord.setCheckOutStation(stationName);
-    existingCheckInRecord.setCheckOutTime(t);
+    currentCheckInRecord.setCheckOutStation(stationName);
+    currentCheckInRecord.setCheckOutTime(t);
 
-    populateMapRouteAverageTime(existingCheckInRecord.getCheckInStation(), existingCheckInRecord.getCheckOutStation());
+    populateMapRouteAverageTime(currentCheckInRecord);
+    mapPersonalIdAndCurrentCheckIn.remove(id);
   }
 
   public double getAverageTime(String startStation, String endStation) {
     validateStartStation(startStation);
     validateEndStation(endStation);
-    return mapRouteAverageTime.getOrDefault(new Trip(startStation, endStation), 0d);
+    return mapRouteAndAverageTime.getOrDefault(new Route(startStation, endStation), 0d);
   }
 
   private void validateInput(int id, String stationName, int t) {
@@ -76,20 +76,30 @@ public class UndergroundSystem {
   }
 
   private void validateStartStation(String startStation) {
-    if (trips.stream().noneMatch(t -> t.getStartStation().equals(startStation))) {
+    if (routes.stream().noneMatch(t -> t.getStartStation().equals(startStation))) {
       throw new IllegalArgumentException(String.format("Start station name %s does not exists", startStation));
     }
   }
 
   private void validateEndStation(String endStation) {
-    if (trips.stream().noneMatch(t -> t.getEndStation().equals(endStation))) {
+    if (routes.stream().noneMatch(t -> t.getEndStation().equals(endStation))) {
       throw new IllegalArgumentException(String.format("End station name %s does not exists", endStation));
     }
   }
 
-  private void populateMapRouteAverageTime(String startStation, String endStation) {
-    Double averageTime = checkInRecords.stream().filter(r -> startStation.equals(r.getCheckInStation()) &&
-      endStation.equals(r.getCheckOutStation())).mapToInt(r -> r.getCheckOutTime() - r.getCheckInTime()).average().getAsDouble();
-    mapRouteAverageTime.put(new Trip(startStation, endStation), averageTime);
+  private void populateMapRouteAverageTime(CheckInRecord currentCheckInRecord) {
+    Route route = new Route(currentCheckInRecord.getCheckInStation(), currentCheckInRecord.getCheckOutStation());
+    Integer previousTotalCheckIns =  mapRouteAndTotalCheckIns.getOrDefault(route,0);
+    Integer currentTotalCheckIns = previousTotalCheckIns + 1;
+
+    int time = currentCheckInRecord.getCheckOutTime() - currentCheckInRecord.getCheckInTime();
+    if (!mapRouteAndAverageTime.containsKey(route)) {
+      mapRouteAndAverageTime.put(route, Double.valueOf(time));
+    } else {
+      Double currentAverageTime = mapRouteAndAverageTime.get(route);
+      mapRouteAndAverageTime.put(route, ((currentAverageTime * previousTotalCheckIns) + time) / currentTotalCheckIns);
+    }
+
+    mapRouteAndTotalCheckIns.put(route, currentTotalCheckIns);
   }
 }
